@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
-import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from "@angular/common/http";
+import {HttpClient, HttpEventType, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Post} from "./post.model";
-import {catchError, map} from "rxjs/operators";
+import {catchError, map, tap} from "rxjs/operators";
 import {Subject, throwError} from "rxjs";
 
 @Injectable({providedIn: 'root'})
@@ -17,7 +17,7 @@ export class PostsService {
       content: content
     }
 
-    this.httpClient.post<{ name: string }>('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json', postData) // angular will convert the postData to json automatically
+    this.httpClient.post<{ name: string }>('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json', postData, {observe: 'response'}) // angular will convert the postData to json automatically - the observe param indicates to angular that the response should be whole, and not extracted from body
       .subscribe(responseData => { // post will not work if there is no subscription to the resulting observable
         console.log(responseData); // responseData is the response's body extracted automatically
       }, error => {
@@ -32,7 +32,8 @@ export class PostsService {
     return this.httpClient.get<{ [key: string]: Post }>('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json', // this indicates that the response will be an object with a random string as a key, and it's type is Post
       {
         headers: new HttpHeaders({"Custom-header": "Hello"}),
-        params: new HttpParams().set('print', 'pretty')
+        params: new HttpParams().set('print', 'pretty'),
+        // responseType: 'text' <- set the response type
       })
       .pipe(map((responseData) => { // the response data type is the one specified in the get() method
           const postsArray: Post[] = []
@@ -56,6 +57,16 @@ export class PostsService {
   }
 
   clearPosts() {
-    return this.httpClient.delete('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json');
+    return this.httpClient.delete('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json', {
+      observe: 'events',
+      responseType: 'text' // the default is json
+    }).pipe(tap(event => {
+      if (event.type === HttpEventType.Sent) {
+        console.log(event);
+      }
+      if (event.type === HttpEventType.Response) {
+        console.log(event);
+      }
+    }));
   }
 }
