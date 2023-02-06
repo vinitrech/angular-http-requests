@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {HttpClient, HttpErrorResponse} from "@angular/common/http";
+import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Post} from "./post.model";
 import {catchError, map} from "rxjs/operators";
 import {Subject, throwError} from "rxjs";
@@ -29,7 +29,11 @@ export class PostsService {
   }
 
   fetchPosts() {
-    return this.httpClient.get<{ [key: string]: Post }>('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json') // this indicates that the response will be an object with a random string as a key, and it's type is Post
+    return this.httpClient.get<{ [key: string]: Post }>('https://angular-http-requests-7afaf-default-rtdb.firebaseio.com/posts.json', // this indicates that the response will be an object with a random string as a key, and it's type is Post
+      {
+        headers: new HttpHeaders({"Custom-header": "Hello"}),
+        params: new HttpParams().set('print', 'pretty')
+      })
       .pipe(map((responseData) => { // the response data type is the one specified in the get() method
           const postsArray: Post[] = []
 
